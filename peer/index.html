@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.16/peer.min.js"></script>
+  <style>
+    .app {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <span id="my-number"></span>
+  <video id="video"></video>
+  <input type="text" id="number">
+  <button onclick="call(document.getElementById('number').value)">CALL</button>
+</div>
+<script>
+  const peer = new Peer({host: 'c8453b07.ngrok.io', port: 80})
+  const video = document.getElementById('video')
+  const myNumber = document.getElementById('my-number')
+
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+
+  peer.on('open', function (id) {myNumber.innerText = id})
+
+  peer.on('call', function (call) {
+    navigator.getUserMedia({video: true, audio: true}, function (stream) {
+      call.answer(stream) // Answer the call with an A/V stream.
+      call.on('stream', function (remoteStream) {
+        video.srcObject = remoteStream
+        video.play()
+      })
+    }, function (err) {
+      console.log('Failed to get local stream', err)
+    })
+  })
+
+  function call(id) {
+    navigator.getUserMedia({video: true, audio: true}, function (stream) {
+      const call = peer.call(id, stream)
+      call.on('stream', function (remoteStream) {
+        video.srcObject = remoteStream
+        video.play()
+      })
+    }, function (err) {
+      console.log('Failed to get local stream', err)
+    })
+  }
+</script>
+</body>
+</html>
